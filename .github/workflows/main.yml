@@ -15,12 +15,11 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup Theos environment
-        uses: theos/setup-theos-action@v1
+      - name: Setup Theos
+        uses: theos/setup-theos-action@main # Sửa từ v1 thành main để khớp với repo
 
       - name: Build Package
         run: |
-          # Theos Action đã tự động cài mọi thứ, bạn chỉ việc gõ make
           make package FINALPACKAGE=1
         
       - name: Upload Artifact
