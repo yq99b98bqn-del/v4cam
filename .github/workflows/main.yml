@@ -26,13 +26,13 @@ jobs:
       - name: Setup Toolchain & SDK
         run: |
           export THEOS=/opt/theos
-          # Tải Toolchain (Bộ biên dịch cho Linux)
-          curl -LO https://github.com/theos/toolchain/releases/download/linux-arm64/toolchain-linux-arm64.tar.gz
+          # Tải Toolchain từ nguồn ổn định hơn
+          curl -LO https://github.com/theos/toolchain/releases/download/linux-x86_64/toolchain-linux-x86_64.tar.gz
           mkdir -p $THEOS/toolchain
-          tar -xf toolchain-linux-arm64.tar.gz -C $THEOS/toolchain
-          rm toolchain-linux-arm64.tar.gz
+          tar -xf toolchain-linux-x86_64.tar.gz -C $THEOS/toolchain
+          rm toolchain-linux-x86_64.tar.gz
           
-          # Tải SDK
+          # Tải SDK iOS
           rm -rf $THEOS/sdks
           git clone --depth 1 https://github.com/theos/sdks.git $THEOS/sdks
 
@@ -40,7 +40,7 @@ jobs:
         run: |
           export THEOS=/opt/theos
           export PATH=$THEOS/bin:$PATH
-          # Build chính thức
+          # Build chính thức cho iPhone (arm64)
           make package FINALPACKAGE=1
         
       - name: Upload Artifact
