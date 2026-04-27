@@ -12,17 +12,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Setup Theos
-        uses: theos/setup-theos-action@main # Sửa từ v1 thành main để khớp với repo
+        uses: Randomblock1/theos-action@v1
 
       - name: Build Package
-        run: |
-          make package FINALPACKAGE=1
-        
+        run: make package FINALPACKAGE=1
+
       - name: Upload Artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: v4h-USB-Pro-Deb
