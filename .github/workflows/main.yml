@@ -26,15 +26,17 @@ jobs:
       - name: Setup iOS SDK
         run: |
           export THEOS=/opt/theos
-          # Sửa lỗi Permission bằng cách tạo thư mục trước và cấp quyền
+          # Xóa thư mục cũ nếu có để tránh lỗi 'already exists'
+          rm -rf $THEOS/sdks
           mkdir -p $THEOS/sdks
+          # Tải SDK cực nhanh (chỉ lấy bản mới nhất)
           git clone --depth 1 https://github.com/theos/sdks.git $THEOS/sdks
 
       - name: Build Package
         run: |
           export THEOS=/opt/theos
           export PATH=$THEOS/bin:$PATH
-          # Ép kiểu build cho kiến trúc arm64
+          # Lệnh build chính thức
           make package FINALPACKAGE=1
         
       - name: Upload Artifact
