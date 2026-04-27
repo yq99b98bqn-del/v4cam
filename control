@@ -1,8 +1,8 @@
 Package: com.v4h.usbcam
 Name: v4h USB Pro
-Depends: mobilesubstrate | org.coolstar.libhooker | org.coolstar.substitute
-Version: 1.0.0
+Depends: firmware (>= 14.0)
+Version: 1.0.1
 Architecture: iphoneos-arm
-Description: Fake Camera via USB 100% No Delay for iOS 15.8.3
+Description: VCAM toggle app and build-safe iOS tweak scaffold.
 Author: v4h
 Section: Tweaks
