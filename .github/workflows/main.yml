@@ -2,10 +2,8 @@ name: Build v4h USB Pro
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-  workflow_dispatch: # Cho phép nhấn nút build thủ công
+    branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -27,16 +25,18 @@ jobs:
 
       - name: Setup iOS SDK
         run: |
-          # Tải SDK iOS 15 để build cho iPhone 15.8.3
-          git clone https://github.com/theos/sdks.git $THEOS/sdks
-          # Hoặc bạn có thể trỏ trực tiếp vào thư mục SDK cụ thể nếu cần
+          export THEOS=/opt/theos
+          # Sửa lỗi Permission bằng cách tạo thư mục trước và cấp quyền
+          mkdir -p $THEOS/sdks
+          git clone --depth 1 https://github.com/theos/sdks.git $THEOS/sdks
 
       - name: Build Package
         run: |
           export THEOS=/opt/theos
           export PATH=$THEOS/bin:$PATH
+          # Ép kiểu build cho kiến trúc arm64
           make package FINALPACKAGE=1
-
+        
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
