@@ -1,0 +1,44 @@
+name: Build v4h USB Pro
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch: # Cho phép nhấn nút build thủ công
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Theos
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fakechroot binutils build-essential perl git curl libssl-dev libfl-dev zlib1g-dev libzstd-dev
+          export THEOS=/opt/theos
+          sudo git clone --recursive https://github.com/theos/theos.git $THEOS
+          sudo chown -R $(whoami):$(id -g) $THEOS
+
+      - name: Setup iOS SDK
+        run: |
+          # Tải SDK iOS 15 để build cho iPhone 15.8.3
+          git clone https://github.com/theos/sdks.git $THEOS/sdks
+          # Hoặc bạn có thể trỏ trực tiếp vào thư mục SDK cụ thể nếu cần
+
+      - name: Build Package
+        run: |
+          export THEOS=/opt/theos
+          export PATH=$THEOS/bin:$PATH
+          make package FINALPACKAGE=1
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: v4h-USB-Pro-Deb
+          path: packages/*.deb
