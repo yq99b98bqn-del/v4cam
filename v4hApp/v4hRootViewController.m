@@ -1,12 +1,5 @@
 #import "v4hRootViewController.h"
-
-static NSString * const kPrefsSuite = @"com.v4h.usbcam";
-static NSString * const kReloadNotify = @"com.v4h.usbcam/Reload";
-
-@interface v4hRootViewController ()
-@property(nonatomic,strong) UISwitch *enableSwitch;
-@property(nonatomic,strong) UILabel *statusLabel;
-@end
+#import <CoreFoundation/CoreFoundation.h>
 
 @implementation v4hRootViewController
 
@@ -15,68 +8,35 @@ static NSString * const kReloadNotify = @"com.v4h.usbcam/Reload";
     self.title = @"v4h USB Cam";
     self.view.backgroundColor = [UIColor systemBackgroundColor];
 
-    UILabel *title = [[UILabel alloc] initWithFrame:CGRectZero];
-    title.text = @"VCAM Toggle";
-    title.font = [UIFont boldSystemFontOfSize:28];
-    title.textAlignment = NSTextAlignmentCenter;
-    title.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.view addSubview:title];
+    UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 120, self.view.bounds.size.width - 40, 40)];
+    titleLabel.text = @"Enable VCAM";
+    titleLabel.textAlignment = NSTextAlignmentCenter;
+    titleLabel.font = [UIFont boldSystemFontOfSize:24];
+    [self.view addSubview:titleLabel];
 
-    self.statusLabel = [[UILabel alloc] initWithFrame:CGRectZero];
-    self.statusLabel.font = [UIFont systemFontOfSize:16];
-    self.statusLabel.textAlignment = NSTextAlignmentCenter;
-    self.statusLabel.numberOfLines = 0;
-    self.statusLabel.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.view addSubview:self.statusLabel];
+    UILabel *desc = [[UILabel alloc] initWithFrame:CGRectMake(20, 165, self.view.bounds.size.width - 40, 70)];
+    desc.text = @"Bật/tắt tweak bằng công tắc bên dưới. Sau khi đổi, thoát và mở lại app camera cần dùng.";
+    desc.textAlignment = NSTextAlignmentCenter;
+    desc.numberOfLines = 0;
+    desc.font = [UIFont systemFontOfSize:14];
+    [self.view addSubview:desc];
 
-    self.enableSwitch = [[UISwitch alloc] initWithFrame:CGRectZero];
-    self.enableSwitch.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.enableSwitch addTarget:self action:@selector(toggleTweak:) forControlEvents:UIControlEventValueChanged];
-    [self.view addSubview:self.enableSwitch];
+    UISwitch *sw = [[UISwitch alloc] initWithFrame:CGRectZero];
+    sw.center = CGPointMake(self.view.bounds.size.width / 2.0, 270);
+    [sw addTarget:self action:@selector(toggleTweak:) forControlEvents:UIControlEventValueChanged];
 
-    UIButton *respring = [UIButton buttonWithType:UIButtonTypeSystem];
-    [respring setTitle:@"Respring" forState:UIControlStateNormal];
-    respring.titleLabel.font = [UIFont boldSystemFontOfSize:18];
-    respring.translatesAutoresizingMaskIntoConstraints = NO;
-    [respring addTarget:self action:@selector(respring) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:respring];
+    NSUserDefaults *prefs = [[NSUserDefaults alloc] initWithSuiteName:@"com.v4h.usbcam"];
+    id saved = [prefs objectForKey:@"enabled"];
+    [sw setOn:(saved ? [prefs boolForKey:@"enabled"] : YES)];
 
-    [NSLayoutConstraint activateConstraints:@[
-        [title.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor constant:60],
-        [title.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
-        [self.enableSwitch.topAnchor constraintEqualToAnchor:title.bottomAnchor constant:40],
-        [self.enableSwitch.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
-        [self.statusLabel.topAnchor constraintEqualToAnchor:self.enableSwitch.bottomAnchor constant:25],
-        [self.statusLabel.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:24],
-        [self.statusLabel.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-24],
-        [respring.topAnchor constraintEqualToAnchor:self.statusLabel.bottomAnchor constant:30],
-        [respring.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor]
-    ]];
-
-    [self reloadState];
-}
-
-- (void)reloadState {
-    NSUserDefaults *prefs = [[NSUserDefaults alloc] initWithSuiteName:kPrefsSuite];
-    if ([prefs objectForKey:@"enabled"] == nil) {
-        [prefs setBool:YES forKey:@"enabled"];
-        [prefs synchronize];
-    }
-    BOOL enabled = [prefs boolForKey:@"enabled"];
-    [self.enableSwitch setOn:enabled animated:NO];
-    self.statusLabel.text = enabled ? @"Đang bật" : @"Đang tắt";
+    [self.view addSubview:sw];
 }
 
 - (void)toggleTweak:(UISwitch *)sender {
-    NSUserDefaults *prefs = [[NSUserDefaults alloc] initWithSuiteName:kPrefsSuite];
+    NSUserDefaults *prefs = [[NSUserDefaults alloc] initWithSuiteName:@"com.v4h.usbcam"];
     [prefs setBool:sender.isOn forKey:@"enabled"];
     [prefs synchronize];
-    CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (__bridge CFStringRef)kReloadNotify, NULL, NULL, YES);
-    [self reloadState];
-}
-
-- (void)respring {
-    system("/usr/bin/killall -9 SpringBoard");
+    CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFSTR("com.v4h.usbcam/Reload"), NULL, NULL, YES);
 }
 
 @end

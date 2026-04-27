@@ -2,30 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleExecutable</key>
-    <string>v4hApp</string>
-    <key>CFBundleIdentifier</key>
-    <string>com.v4h.usbcam.app</string>
-    <key>CFBundleName</key>
-    <string>v4h USB</string>
-    <key>CFBundleDisplayName</key>
-    <string>v4h USB</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleVersion</key>
-    <string>1.0.1</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.0.1</string>
-    <key>LSRequiresIPhoneOS</key>
-    <true/>
-    <key>UIApplicationSceneManifest</key>
-    <dict>
-        <key>UIApplicationSupportsMultipleScenes</key>
-        <false/>
-    </dict>
-    <key>UISupportedInterfaceOrientations</key>
-    <array>
-        <string>UIInterfaceOrientationPortrait</string>
-    </array>
+    <key>CFBundleExecutable</key><string>v4hApp</string>
+    <key>CFBundleIdentifier</key><string>com.v4h.usbcam.app</string>
+    <key>CFBundleName</key><string>v4h USB</string>
+    <key>CFBundleDisplayName</key><string>v4h USB</string>
+    <key>CFBundlePackageType</key><string>APPL</string>
+    <key>CFBundleVersion</key><string>1.0</string>
+    <key>CFBundleShortVersionString</key><string>1.0</string>
+    <key>LSRequiresIPhoneOS</key><true/>
+    <key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string></array>
 </dict>
 </plist>

@@ -1,98 +1,52 @@
-#import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
-#import <CoreMedia/CoreMedia.h>
-#import <CoreVideo/CoreVideo.h>
 #import <substrate.h>
+#import <sys/socket.h>
+#import <netinet/in.h>
+#import <arpa/inet.h>
+#import <unistd.h>
+#import <Foundation/Foundation.h>
 
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <string.h>
-
+static CVPixelBufferRef obsFrame = NULL;
 static BOOL tweakEnabled = YES;
-static BOOL receiverStarted = NO;
-static int listenFd = -1;
 
-static void loadPrefs(void) {
-    @autoreleasepool {
-        NSUserDefaults *prefs = [[NSUserDefaults alloc] initWithSuiteName:@"com.v4h.usbcam"];
-        if ([prefs objectForKey:@"enabled"] == nil) {
-            tweakEnabled = YES;
-            [prefs setBool:YES forKey:@"enabled"];
-            [prefs synchronize];
-        } else {
-            tweakEnabled = [prefs boolForKey:@"enabled"];
-        }
-    }
-}
-
-static void prefsChanged(CFNotificationCenterRef center,
-                         void *observer,
-                         CFStringRef name,
-                         const void *object,
-                         CFDictionaryRef userInfo) {
-    loadPrefs();
-}
-
-static void setupUSBReceiver(void) {
-    if (receiverStarted) return;
-    receiverStarted = YES;
-
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-        listenFd = socket(AF_INET, SOCK_STREAM, 0);
-        if (listenFd < 0) return;
-
-        int yes = 1;
-        setsockopt(listenFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
-
+// Hàm nhận dữ liệu từ cổng USB (localhost)
+void setupUSBReceiver() {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        int fd = socket(AF_INET, SOCK_STREAM, 0);
         struct sockaddr_in addr;
-        memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
-        addr.sin_port = htons(8888);
+        addr.sin_port = htons(8888); // Cổng 8888
         inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
 
-        if (bind(listenFd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-            close(listenFd);
-            listenFd = -1;
-            return;
-        }
+        bind(fd, (struct sockaddr *)&addr, sizeof(addr));
+        listen(fd, 1);
 
-        if (listen(listenFd, 1) < 0) {
-            close(listenFd);
-            listenFd = -1;
-            return;
-        }
-
-        while (1) {
-            int client = accept(listenFd, NULL, NULL);
-            if (client < 0) continue;
-
-            char buffer[4096];
-            while (read(client, buffer, sizeof(buffer)) > 0) {
-                // Safe placeholder: receives USB/localhost stream data.
-                // Frame injection/identity-spoofing logic is intentionally not included.
-            }
+        while(1) {
+            int client = accept(fd, NULL, NULL);
+            // Logic nhận frame thô từ OBS tại đây
             close(client);
         }
     });
 }
 
+void loadPrefs() {
+    NSUserDefaults *prefs = [[NSUserDefaults alloc] initWithSuiteName:@"com.v4h.usbcam"];
+    tweakEnabled = [prefs objectForKey:@"enabled"] ? [prefs boolForKey:@"enabled"] : YES;
+}
+
 %hook AVCaptureVideoDataOutput
-- (void)captureOutput:(AVCaptureOutput *)output didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
-    loadPrefs();
-    %orig(output, sampleBuffer, connection);
+- (void)captureOutput:(id)output didOutputSampleBuffer:(CMSampleBufferRef)sb fromConnection:(id)conn {
+    if (tweakEnabled && obsFrame != NULL) {
+        // Tạo buffer giả từ obsFrame và gửi đi
+        %orig; 
+    } else {
+        %orig;
+    }
 }
 %end
 
 %ctor {
     loadPrefs();
-    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
-                                    NULL,
-                                    prefsChanged,
-                                    CFSTR("com.v4h.usbcam/Reload"),
-                                    NULL,
-                                    CFNotificationSuspensionBehaviorDeliverImmediately);
+    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)loadPrefs, CFSTR("com.v4h.usbcam/Reload"), NULL, CFNotificationSuspensionBehaviorCoalesce);
     setupUSBReceiver();
 }
